@@ -1,0 +1,220 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Developer’s Guide &mdash; eFEL 2.6.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.6.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="top" title="eFEL 2.6.3 documentation" href="index.html" />
+    <link rel="prev" title="Python API" href="api.html" /> 
+  </head>
+  <body role="document">
+      <div class="header"><img class="rightlogo" src="_static/bbp.png" alt="Logo"/><h1 class="heading"><a href="index.html">
+          <span>eFEL 2.6.3 documentation</span></a></h1>
+        <h2 class="heading"><span>Developer’s Guide</span></h2>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="api.html">Python API</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="developer-s-guide">
+<h1><a class="toc-backref" href="#id2">Developer&#8217;s Guide</a><a class="headerlink" href="#developer-s-guide" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#developer-s-guide" id="id2">Developer&#8217;s Guide</a><ul>
+<li><a class="reference internal" href="#requirements" id="id3">Requirements</a></li>
+<li><a class="reference internal" href="#forking-and-cloning-the-git-repository" id="id4">Forking and cloning the git repository</a></li>
+<li><a class="reference internal" href="#makefile" id="id5">Makefile</a></li>
+<li><a class="reference internal" href="#adding-a-new-efeature" id="id6">Adding a new eFeature</a><ul>
+<li><a class="reference internal" href="#picking-a-name" id="id7">Picking a name</a></li>
+<li><a class="reference internal" href="#creating-a-branch" id="id8">Creating a branch</a></li>
+<li><a class="reference internal" href="#implementation" id="id9">Implementation</a></li>
+<li><a class="reference internal" href="#updating-relevant-files" id="id10">Updating relevant files</a></li>
+<li><a class="reference internal" href="#adding-a-test" id="id11">Adding a test</a></li>
+<li><a class="reference internal" href="#add-documentation" id="id12">Add documentation</a></li>
+<li><a class="reference internal" href="#pull-request" id="id13">Pull request</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="requirements">
+<h2><a class="toc-backref" href="#id3">Requirements</a><a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>As a developer you will need some extra requirements</p>
+<ul class="simple">
+<li>To get the latest source code: <a class="reference external" href="https://git-scm.com/">Git</a></li>
+<li>To run the tests: <a class="reference external" href="https://nose.readthedocs.org/en/latest/">Nose</a></li>
+<li>To build the documentation: <a class="reference external" href="http://sphinx-doc.org/">Sphinx</a>, and pdf2latex
+(e.g. from <a class="reference external" href="https://tug.org/mactex/">Mactex</a>)</li>
+</ul>
+</div>
+<div class="section" id="forking-and-cloning-the-git-repository">
+<h2><a class="toc-backref" href="#id4">Forking and cloning the git repository</a><a class="headerlink" href="#forking-and-cloning-the-git-repository" title="Permalink to this headline">¶</a></h2>
+<p>To make changes to the eFEL, one first needs to fork the eFEL:</p>
+<div class="highlight-python"><div class="highlight"><pre>https://help.github.com/articles/fork-a-repo/
+</pre></div>
+</div>
+<p>Then one creates a local clone of the git repository on your computer:</p>
+<div class="highlight-python"><div class="highlight"><pre>git clone https://github.com/yourgithubusername/eFEL.git
+</pre></div>
+</div>
+<p>After changes are made, they should be pushed back to your github account.
+Then a pull request can be created:</p>
+<div class="highlight-python"><div class="highlight"><pre>https://help.github.com/articles/using-pull-requests/
+</pre></div>
+</div>
+</div>
+<div class="section" id="makefile">
+<h2><a class="toc-backref" href="#id5">Makefile</a><a class="headerlink" href="#makefile" title="Permalink to this headline">¶</a></h2>
+<p>To simplify certain tasks for developers, a Makefile is provided in the root of
+the eFEL project. This Makefile has the following targets</p>
+<ul class="simple">
+<li><strong>install</strong>: installs the eFEL using pip from the working directory</li>
+<li><strong>test</strong>: run the installation and all the Nose tests</li>
+<li><strong>doc</strong>: build the sphinx and latex documentation</li>
+<li><strong>clean</strong>: clean up the build directories</li>
+<li><strong>pypi</strong>: run test target and upload to pypi</li>
+<li><strong>push</strong>: clean the build, update the version from the git hash, install eFEL,
+run the tests, build the doc, and push the documentation and source to github</li>
+</ul>
+</div>
+<div class="section" id="adding-a-new-efeature">
+<h2><a class="toc-backref" href="#id6">Adding a new eFeature</a><a class="headerlink" href="#adding-a-new-efeature" title="Permalink to this headline">¶</a></h2>
+<p>Adding a new eFeature requires several steps.</p>
+<div class="section" id="picking-a-name">
+<h3><a class="toc-backref" href="#id7">Picking a name</a><a class="headerlink" href="#picking-a-name" title="Permalink to this headline">¶</a></h3>
+<p>Try to be specific in the name of the eFeature, because in the future you or
+somebody else might want to develop an eFeature with slightly different
+behavior. Don&#8217;t be afraid to use long names, e.g. &#8216;min_voltage_between_spikes&#8217;
+is perfectly ok.</p>
+</div>
+<div class="section" id="creating-a-branch">
+<h3><a class="toc-backref" href="#id8">Creating a branch</a><a class="headerlink" href="#creating-a-branch" title="Permalink to this headline">¶</a></h3>
+<p>Create a git branch with the name of the new eFeature:</p>
+<div class="highlight-python"><div class="highlight"><pre>git checkout -b your_efeaturename
+</pre></div>
+</div>
+</div>
+<div class="section" id="implementation">
+<h3><a class="toc-backref" href="#id9">Implementation</a><a class="headerlink" href="#implementation" title="Permalink to this headline">¶</a></h3>
+<p>All the eFeatures in the eFEL are coded in C++. Thanks to an
+<a class="reference external" href="https://github.com/BlueBrain/eFEL/blob/master/efel/DependencyV5.txt">eFeatures dependency settings file</a>,
+several implementation of the same eFeature name can coexist. E.g.
+<a class="reference external" href="https://github.com/BlueBrain/eFEL/blob/master/efel/cppcore/LibV5.cpp">this</a>
+is the file with the implementations of all &#8216;V5&#8217; features.
+You can implement the new eFeature by extending one of the current LibV* files,
+or by creating your own.
+You might want to consider starting the implementation by writing a test for
+the eFeature (see below for instruction on how to do that).</p>
+</div>
+<div class="section" id="updating-relevant-files">
+<h3><a class="toc-backref" href="#id10">Updating relevant files</a><a class="headerlink" href="#updating-relevant-files" title="Permalink to this headline">¶</a></h3>
+<p>Apart from the implementation in the LibV*.cpp file, other files have to be
+changed to accomodate the new eFeature</p>
+<ul class="simple">
+<li>efel/cppcore/LibV5.h: Declare your feature</li>
+<li>efel/DependencyV5.txt: Add your eFeature and its dependencies to this file</li>
+<li>efel/cppcore/FillFptrTable.cpp: Add a reference to the eFeature in the
+relevant table</li>
+<li>efel/cppcore/cfeature.cpp: Add the type of the eFeature</li>
+<li>AUTHORS.txt: If your name isn&#8217;t there yet, add yourself to the authors list</li>
+</ul>
+<p>You can confirm everything compiles correctly by executing:</p>
+<div class="highlight-python"><div class="highlight"><pre>make test
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-a-test">
+<h3><a class="toc-backref" href="#id11">Adding a test</a><a class="headerlink" href="#adding-a-test" title="Permalink to this headline">¶</a></h3>
+<p>Most eFeatures are fairly easy to implement in Python, so it is advised to first
+write a Python implementation of your eFeature, and to add it Nose tests.
+Then, while you are implementing the code in C++ you can easily compare the
+results to the Nose test.</p>
+<p>The Nose tests of the individual eFeatures are
+<a class="reference external" href="https://github.com/BlueBrain/eFEL/blob/master/efel/tests/test_basic.py">here</a>
+.Just add your own test by defining a new function &#8216;test_yourfeature()&#8217;.</p>
+<p>Some test data is available
+<a class="reference external" href="https://github.com/BlueBrain/eFEL/tree/master/efel/tests/testdata/basic">here</a>
+, but you can of course add your own traces.</p>
+<p>The easiest way to run the tests is by executing:</p>
+<div class="highlight-python"><div class="highlight"><pre>make test
+</pre></div>
+</div>
+</div>
+<div class="section" id="add-documentation">
+<h3><a class="toc-backref" href="#id12">Add documentation</a><a class="headerlink" href="#add-documentation" title="Permalink to this headline">¶</a></h3>
+<p>Add the documentation of the new eFeature to this file:</p>
+<p><a class="reference external" href="https://github.com/BlueBrain/eFEL/blob/master/docs/source/eFeatures.rst">https://github.com/BlueBrain/eFEL/blob/master/docs/source/eFeatures.rst</a></p>
+<p>Please provide some pseudo-Python code for the eFeature.</p>
+<p>The documentation can be built by:</p>
+<div class="highlight-python"><div class="highlight"><pre>make doc
+</pre></div>
+</div>
+<p>It can be viewed by opening:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">docs</span><span class="o">/</span><span class="n">build</span><span class="o">/</span><span class="n">html</span><span class="o">/</span><span class="n">index</span><span class="o">.</span><span class="n">html</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="pull-request">
+<h3><a class="toc-backref" href="#id13">Pull request</a><a class="headerlink" href="#pull-request" title="Permalink to this headline">¶</a></h3>
+<p>When all the above steps were succesfull, you can push the
+new eFeature branch to your github repository:</p>
+<div class="highlight-python"><div class="highlight"><pre>git commit -a
+git push origin your_efeaturename
+</pre></div>
+</div>
+<p>Finally create a pull request:</p>
+<p><a class="reference external" href="https://help.github.com/articles/using-pull-requests/">https://help.github.com/articles/using-pull-requests/</a></p>
+</div>
+</div>
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="api.html">Python API</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, BBP, EPFL.
+      Last updated on Sep 01, 2015.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>
