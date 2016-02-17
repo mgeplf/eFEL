@@ -28,6 +28,67 @@ using std::map;
 using std::string;
 using std::vector;
 
+/* reduce boiler plate for checking if there is cached data
+ */
+#define CHECK_DOUBLE_CACHE(name)               \
+    do {                                       \
+      int retVal, nSize;                       \
+      retVal = CheckInDoublemap(IntDoubleData, \
+                             StringData,       \
+                             string(#name),    \
+                             nSize);           \
+      if (retVal){                             \
+        return nSize;                          \
+      }                                        \
+    }while(0);
+
+#define CHECK_INT_CACHE(name)                \
+    do {                                     \
+      int retVal, nSize;                     \
+      retVal = CheckInIntmap(IntFeatureData, \
+                             StringData,     \
+                             string(#name),  \
+                             nSize);         \
+      if (retVal){                           \
+        return nSize;                        \
+      }                                      \
+    }while(0);
+
+/* Simplify boiler-plate of defining a double/int vector, and getting
+ * the data vector associated with a feature name
+ */
+#define GETDOUBLE(name, dest)                 \
+    vector<double> dest;                      \
+    retVal = getDoubleVec(DoubleFeatureData,  \
+                          StringData,         \
+                          string(#name),      \
+                          dest);
+
+#define GETDOUBLE_RET(name, dest, minimum)          \
+    GETDOUBLE(name, dest)                           \
+    if ( retVal < minimum) {                        \
+      GErrorStr += (string(__FUNCTION__) +          \
+                    ": Can't find vector " # name); \
+      return -1;                                    \
+    }
+
+/*
+#define GETINT(name, dest)                    \
+    vector<int> dest;                         \
+    retVal = getIntVec(IntFeatureData,        \
+                          StringData,         \
+                          string(#name),      \
+                          dest);
+
+#define GETINT_RET(name, dest, minimum)                        \
+    GETDOUBLE(name, dest)                                      \
+    if ( retVal < minimum) {                                   \
+      GErrorStr += __function__ ": Can't find vector " # name; \
+      return -1;                                               \
+    }
+    */
+
+
 typedef map<string, vector<int> > mapStr2intVec;
 typedef map<string, vector<double> > mapStr2doubleVec;
 typedef map<string, string> mapStr2Str;
