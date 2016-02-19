@@ -25,8 +25,6 @@
 using std::cout;
 using std::endl;
 
-
-
 cFeature::cFeature(const string& strDepFile, const string& outdir)
   : logger(outdir)
 {
@@ -39,15 +37,7 @@ cFeature::cFeature(const string& strDepFile, const string& outdir)
 
   fillfeaturetypes();
 
-  cTree DepTree(strDepFile.c_str());
-  // get Error
-  if (DepTree.ErrorStr.length() != 0) {
-    GErrorStr = DepTree.ErrorStr;
-  }
-  int retVal = DepTree.setFeaturePointers(mapFptrLib, &FptrTable, &fptrlookup);
-  if (retVal < 0) {
-    GErrorStr = DepTree.ErrorStr;
-  }
+  setVersion(strDepFile);
 
   // log output
   time_t rawtime;
@@ -57,19 +47,18 @@ cFeature::cFeature(const string& strDepFile, const string& outdir)
 }
 
 int cFeature::setVersion(string strDepFile) {
-  FptrTable.clear();
-  /*
-  map<string, vector< pair< fptr, string > > >::iterator mapVecItr;
-  vector< pair< fptr, string > > *vecFptr;
-  for(mapVecItr = pFeature->fptrlookup.begin(); mapVecItr !=
-  pFeature->fptrlookup.end(); mapVecItr++){
-      vecFptr   = &(mapVecItr->second);
-      vecFptr->clear();
-  }
-  */
   fptrlookup.clear();
+
   cTree DepTree(strDepFile.c_str());
-  DepTree.setFeaturePointers(mapFptrLib, &FptrTable, &fptrlookup);
+
+  if (DepTree.ErrorStr.length() != 0) {
+    GErrorStr = DepTree.ErrorStr;
+  }
+  int retVal = DepTree.setFeaturePointers(mapFptrLib, &fptrlookup);
+  if (retVal < 0) {
+    GErrorStr = DepTree.ErrorStr;
+  }
+
   return 1;
 }
 
