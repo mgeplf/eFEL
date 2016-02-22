@@ -98,6 +98,7 @@ static int __AP_begin_indices(const vector<double>& t, const vector<double>& v,
   }
   return apbi.size();
 }
+
 int LibV2::AP_begin_indices(mapStr2intVec& IntFeatureData,
                             mapStr2doubleVec& DoubleFeatureData,
                             mapStr2Str& StringData) {
@@ -108,24 +109,21 @@ int LibV2::AP_begin_indices(mapStr2intVec& IntFeatureData,
   if (retVal) {
     return nSize;
   }
+
   vector<double> t;
-  retVal = getDoubleVec(DoubleFeatureData, StringData, "T", t);
-  if (retVal < 0) return -1;
   vector<double> v;
-  retVal = getDoubleVec(DoubleFeatureData, StringData, "V", v);
-  if (retVal < 0) return -1;
   vector<double> stimstart;
-  retVal = getDoubleVec(DoubleFeatureData, StringData, "stim_start", stimstart);
-  if (retVal < 0) return -1;
   vector<double> stimend;
-  retVal = getDoubleVec(DoubleFeatureData, StringData, "stim_end", stimend);
-  if (retVal < 0) return -1;
   vector<int> ahpi;
-  retVal =
-      getIntVec(IntFeatureData, StringData, "min_AHP_indices", ahpi);
+
+  FeatureAccessor fa(IntFeatureData, DoubleFeatureData, StringData);
+  retVal = fa.getFeatures("T", t, "V", v, "stim_start", stimstart, 
+                          "stim_end", stimend, "min_AHP_indices", ahpi);
   if (retVal < 0) return -1;
+
   vector<int> apbi;
   retVal = __AP_begin_indices(t, v, stimstart[0], stimend[0], ahpi, apbi);
+
   if (retVal >= 0) {
     setIntVec(IntFeatureData, StringData, "AP_begin_indices", apbi);
   }
@@ -167,16 +165,16 @@ int LibV2::AP_end_indices(mapStr2intVec& IntFeatureData,
   }
 
   vector<double> t;
-  retVal = getDoubleVec(DoubleFeatureData, StringData, "T", t);
-  if (retVal < 0) return -1;
   vector<double> v;
-  retVal = getDoubleVec(DoubleFeatureData, StringData, "V", v);
-  if (retVal < 0) return -1;
   vector<int> pi;
-  retVal = getIntVec(IntFeatureData, StringData, "peak_indices", pi);
+  FeatureAccessor fa(IntFeatureData, DoubleFeatureData, StringData);
+
+  retVal = fa.getFeatures("T", t, "V", v, "peak_indices", pi);
   if (retVal < 0) return -1;
+
   vector<int> apei;
   retVal = __AP_end_indices(t, v, pi, apei);
+
   if (retVal >= 0) {
     setIntVec(IntFeatureData, StringData, "AP_end_indices", apei);
   }

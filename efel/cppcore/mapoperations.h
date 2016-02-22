@@ -50,6 +50,91 @@ int CheckInDoublemap(mapStr2doubleVec& DoubleFeatureData,
 int CheckInIntmap(mapStr2intVec& IntFeatureData, mapStr2Str& StringData,
                   string strFeature, int& nSize);
 
+
+class FeatureAccessor
+{
+public:
+  FeatureAccessor(mapStr2intVec& IntFeatureData, 
+                  mapStr2doubleVec& DoubleFeatureData,
+                  mapStr2Str& StringData)
+      : IntFeatureData(IntFeatureData) 
+      , DoubleFeatureData(DoubleFeatureData)
+      , StringData(StringData)
+      {}
+
+  inline int getFeature(string name, vector<double> &dest)
+  {
+    return getDoubleVec(DoubleFeatureData, StringData, name, dest);
+  }
+
+  inline int getFeature(string name, vector<int> &dest)
+  {
+    return getIntVec(IntFeatureData, StringData, name, dest);
+  }
+
+  template<typename T0, typename T1>
+  inline int getFeatures(string name0, vector<T0> &dest0, 
+                         string name1, vector<T1> &dest1)
+  {
+    int retVal;
+    retVal = getFeature(name0, dest0);
+    if (retVal < 0) return -1;
+    retVal = getFeature(name1, dest1);
+    return retVal;
+  }
+
+  template<typename T0, typename T1, typename T2>
+  inline int getFeatures(string name0, vector<T0> &dest0, 
+                         string name1, vector<T1> &dest1,
+                         string name2, vector<T2> &dest2)
+  {
+    int retVal;
+    retVal = getFeatures(name0, dest0,
+                         name1, dest1);
+    if (retVal < 0) return -1;
+    retVal = getFeature(name2, dest2);
+    return retVal;
+  }
+
+  template<typename T0, typename T1, typename T2, typename T3>
+  inline int getFeatures(string name0, vector<T0> &dest0, 
+                         string name1, vector<T1> &dest1,
+                         string name2, vector<T2> &dest2,
+                         string name3, vector<T3> &dest3)
+  {
+    int retVal;
+    retVal = getFeatures(name0, dest0,
+                         name1, dest1,
+                         name2, dest2);
+    if (retVal < 0) return -1;
+    retVal = getFeature(name3, dest3);
+    return retVal;
+  }
+
+  template<typename T0, typename T1, typename T2, typename T3, typename T4>
+  inline int getFeatures(string name0, vector<T0> &dest0, 
+                         string name1, vector<T1> &dest1,
+                         string name2, vector<T2> &dest2,
+                         string name3, vector<T3> &dest3,
+                         string name4, vector<T4> &dest4)
+  {
+    int retVal;
+    retVal = getFeatures(name0, dest0, 
+                         name1, dest1, 
+                         name2, dest2,
+                         name3, dest3);
+    if (retVal < 0) return -1;
+    retVal = getFeature(name4, dest4);
+    return retVal;
+  }
+
+private:
+  mapStr2intVec& IntFeatureData;
+  mapStr2doubleVec& DoubleFeatureData;
+  mapStr2Str& StringData;
+};
+
+
 // eCode feature convenience function
 int mean_traces_double(mapStr2doubleVec& DoubleFeatureData,
                        const string& feature, const string& stimulus_name,
