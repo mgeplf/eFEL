@@ -62,23 +62,23 @@ public:
       , StringData(StringData)
       {}
 
-  inline int getFeature(string name, vector<double> &dest)
+  inline bool getFeature(const string &name, vector<double> &dest)
   {
-    return getDoubleVec(DoubleFeatureData, StringData, name, dest);
+    return 0 <= getDoubleVec(DoubleFeatureData, StringData, name, dest);
   }
 
-  inline int getFeature(string name, vector<int> &dest)
+  inline bool getFeature(string name, vector<int> &dest)
   {
-    return getIntVec(IntFeatureData, StringData, name, dest);
+    return 0 <= getIntVec(IntFeatureData, StringData, name, dest);
   }
 
   template<typename T0, typename T1>
-  inline int getFeatures(string name0, vector<T0> &dest0, 
+  inline bool getFeatures(string name0, vector<T0> &dest0, 
                          string name1, vector<T1> &dest1)
   {
-    int retVal;
+    bool retVal;
     retVal = getFeature(name0, dest0);
-    if (retVal < 0) return -1;
+    if (!retVal) return retVal;
     retVal = getFeature(name1, dest1);
     return retVal;
   }
@@ -88,10 +88,10 @@ public:
                          string name1, vector<T1> &dest1,
                          string name2, vector<T2> &dest2)
   {
-    int retVal;
+    bool retVal;
     retVal = getFeatures(name0, dest0,
                          name1, dest1);
-    if (retVal < 0) return -1;
+    if (!retVal) return retVal;
     retVal = getFeature(name2, dest2);
     return retVal;
   }
@@ -102,11 +102,11 @@ public:
                          string name2, vector<T2> &dest2,
                          string name3, vector<T3> &dest3)
   {
-    int retVal;
+    bool retVal;
     retVal = getFeatures(name0, dest0,
                          name1, dest1,
                          name2, dest2);
-    if (retVal < 0) return -1;
+    if (!retVal) return retVal;
     retVal = getFeature(name3, dest3);
     return retVal;
   }
@@ -118,12 +118,12 @@ public:
                          string name3, vector<T3> &dest3,
                          string name4, vector<T4> &dest4)
   {
-    int retVal;
+    bool retVal;
     retVal = getFeatures(name0, dest0, 
                          name1, dest1, 
                          name2, dest2,
                          name3, dest3);
-    if (retVal < 0) return -1;
+    if (!retVal) return retVal;
     retVal = getFeature(name4, dest4);
     return retVal;
   }

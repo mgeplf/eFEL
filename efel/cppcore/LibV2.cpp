@@ -117,9 +117,9 @@ int LibV2::AP_begin_indices(mapStr2intVec& IntFeatureData,
   vector<int> ahpi;
 
   FeatureAccessor fa(IntFeatureData, DoubleFeatureData, StringData);
-  retVal = fa.getFeatures("T", t, "V", v, "stim_start", stimstart, 
-                          "stim_end", stimend, "min_AHP_indices", ahpi);
-  if (retVal < 0) return -1;
+  if(! fa.getFeatures("T", t, "V", v, "stim_start", stimstart, 
+                      "stim_end", stimend, "min_AHP_indices", ahpi))
+    return -1;
 
   vector<int> apbi;
   retVal = __AP_begin_indices(t, v, stimstart[0], stimend[0], ahpi, apbi);
@@ -167,10 +167,10 @@ int LibV2::AP_end_indices(mapStr2intVec& IntFeatureData,
   vector<double> t;
   vector<double> v;
   vector<int> pi;
-  FeatureAccessor fa(IntFeatureData, DoubleFeatureData, StringData);
 
-  retVal = fa.getFeatures("T", t, "V", v, "peak_indices", pi);
-  if (retVal < 0) return -1;
+  FeatureAccessor fa(IntFeatureData, DoubleFeatureData, StringData);
+  if (! fa.getFeatures("T", t, "V", v, "peak_indices", pi)) 
+    return -1;
 
   vector<int> apei;
   retVal = __AP_end_indices(t, v, pi, apei);
