@@ -25,23 +25,22 @@
 #include <string>
 #include <vector>
 
-using std::map;
-using std::string;
-using std::vector;
+//
+typedef std::vector<std::string> FeatureNames;
+
+//map from Feature (ex: LibV1:foo) to its dependencies: (ex: #LibV1:bar #LibV1:baz)
+typedef std::map<std::string, FeatureNames > DependencyMap;
 
 class cTree {
-  vector<string> strDependencyFile;
+  DependencyMap dependencies;
 
  public:
-  string ErrorStr;
+  std::string ErrorStr;
 
   cTree(const char *strFileName);
-
-  int printTree();
-  int getDependencyList(string str);
-  int setFeaturePointers(map<string, feature2function *> &mapFptrLib,
-                         map<string, vector<featureStringPair> > *FptrLookup);
-
+  std::string listDependencies();
+  int setFeaturePointers(const std::map<std::string, feature2function *> &mapFptrLib,
+                         std::map<std::string, std::vector<featureStringPair> > &FptrLookup);
 };
 
 #endif

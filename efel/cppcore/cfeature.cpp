@@ -20,9 +20,8 @@
 #include "Global.h"
 
 #include <cstdlib>
-#include <iostream>
 
-using std::cout;
+using std::map;
 using std::endl;
 
 cFeature::cFeature(const string& strDepFile, const string& outdir)
@@ -39,7 +38,6 @@ cFeature::cFeature(const string& strDepFile, const string& outdir)
 
   setVersion(strDepFile);
 
-  // log output
   time_t rawtime;
   time(&rawtime);
   logger << "\n" << ctime(&rawtime) << "Initializing new session." << endl;
@@ -54,7 +52,7 @@ int cFeature::setVersion(string strDepFile) {
   if (DepTree.ErrorStr.length() != 0) {
     GErrorStr = DepTree.ErrorStr;
   }
-  int retVal = DepTree.setFeaturePointers(mapFptrLib, &fptrlookup);
+  int retVal = DepTree.setFeaturePointers(mapFptrLib, fptrlookup);
   if (retVal < 0) {
     GErrorStr = DepTree.ErrorStr;
   }
@@ -324,8 +322,8 @@ void cFeature::getTraces(const string& wildcards, vector<string>& params) {
 
 int cFeature::calc_features(const string& name) {
   // stimulus extension
-  map<string, vector<featureStringPair> >::const_iterator lookup_it(
-      fptrlookup.find(name));
+  map<string, vector<featureStringPair> >::const_iterator lookup_it = 
+      fptrlookup.find(name);
   if (lookup_it == fptrlookup.end()) {
     fprintf(stderr,
             "\nFeature [ %s ] dependency file entry or pointer table entry is "
@@ -349,14 +347,7 @@ int cFeature::calc_features(const string& name) {
       //  - the feature is called only once
       //  - the feature operates on "V" and "T" if it operates on traces at all
       setFeatureString("params", "");
-      if (function(mapIntData, mapDoubleData, mapStrData) < 0) {
-        // GErrorStr += "\nFeature [" + name + "] called twice, or doesn't
-        // operate on V and T.";
-        // return -1;i
-        last_failed = true;
-      } else {
-        last_failed = false;
-      }
+      last_failed = function(mapIntData, mapDoubleData, mapStrData) < 0;
     } else {
       // make sure that
       //  -the feature is called once for every trace according to the wildcard
@@ -374,11 +365,7 @@ int cFeature::calc_features(const string& name) {
         // setting the "params" entry here makes sure that the required features
         // require specific traces also
         setFeatureString("params", params[i]);
-        if (function(mapIntData, mapDoubleData, mapStrData) < 0) {
-          last_failed = true;
-        } else {
-          last_failed = false;
-        }
+        last_failed = function(mapIntData, mapDoubleData, mapStrData) < 0;
       }
     }
   }

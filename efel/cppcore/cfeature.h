@@ -43,6 +43,7 @@ class cFeature {
   void fillfeaturetypes();
 
  public:
+  // Full feature name -> vector of pair(feature_function, wildcard)
   std::map<string, vector<featureStringPair > > fptrlookup;
   vector<int>& getmapIntData(string strName);
   vector<double>& getmapDoubleData(string strName);

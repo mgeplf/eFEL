@@ -19,136 +19,118 @@
 #include "DependencyTree.h"
 
 #include <algorithm>
-#include <cstdio>
-#include <istream>
 #include <fstream>
-#include <list>
+#include <iterator>
+#include <sstream>
 #include <utility>
 
-using std::list;
 
-inline string deblank(const string &str) {
-  size_t startpos = str.find_first_not_of(" \t");
-  size_t endpos = str.find_last_not_of(" \t");
-  if (string::npos == startpos || string::npos == endpos)
-    return string();
-  return str.substr(startpos, endpos - startpos + 1);
-}
+using std::map;
+using std::string;
+
+// LibVx:feature_name;wildcards_name
+const char VERSION_END_DELIM = ':';
+const char DEPENDENCY_START_DELIM = '#';
+const char WILDCARD_START_DELIM = ';';
 
 static inline string getVersion(const string str)
 {
-  size_t version_end = str.find(":");
-  return string::npos == version_end ? string() : 
-      str.substr(0, version_end);
+  size_t end = str.find(VERSION_END_DELIM);
+  return string::npos == end ? string() : str.substr(0, end);
 }
 
 static inline string getFeature(const string str)
 {
-  size_t version_end = str.find(":");
-  size_t wildcard_start = str.find(";");
+  size_t version_end = str.find(VERSION_END_DELIM);
+  size_t wildcard_start = str.find(WILDCARD_START_DELIM);
 
   return str.substr(version_end + 1, wildcard_start - version_end - 1);
 }
 
 static inline string getWildcards(const string str)
 {
-  size_t wildcard_start = str.find(";");
-  return string::npos == wildcard_start ? string() : 
+  size_t wildcard_start = str.find(WILDCARD_START_DELIM);
+  return string::npos == wildcard_start ? string() :
       str.substr(wildcard_start + 1);
 }
 
-// return all the features in the first column of the dependency file
-vector<string> getAllParents(const vector<string> &strDependencyFile) {
-  vector<string> lstFeature;
-  for (size_t i = 0; i < strDependencyFile.size(); i++) {
-    string strLine = deblank(strDependencyFile[i]);
-    size_t nPos = strLine.find_first_of('#');
-    string FeatureName = deblank(strLine.substr(0, nPos - 1));
-    if (!FeatureName.empty()) lstFeature.push_back(FeatureName);
-  }
-  return lstFeature;
-}
-
-list<string> getChilds(string feature, const vector<string> &strDependencyFile)
+DependencyMap parseStream(std::istream &cin)
 {
-  list<string> children;
-  for (size_t i = 0; i < strDependencyFile.size(); i++) {
-    string strLine = deblank(strDependencyFile[i]);
-    size_t nPos = strLine.find_first_of('#');
-    string FeatureName = deblank(strLine.substr(0, nPos - 1));
+  DependencyMap ret;
 
-    if (FeatureName != feature)
-      continue;
-
-    while (nPos != string::npos) {
-      strLine = strLine.substr(nPos + 1);
-      nPos = strLine.find_first_of('#');
-      string child = deblank(nPos > 0 ? strLine.substr(0, nPos - 1) : strLine);
-      children.push_back(child);
-    }
-  }
-  return children;
-}
-
-vector<string> parseStream(std::istream &cin)
-{
-  vector<string> strDependencyFile;
   string line;
   do {
     std::getline(cin, line);
-    strDependencyFile.push_back(line);
-  } while (!cin.eof());
-  return strDependencyFile;
-}
 
+    string feature;
+    std::stringstream ss(line);
+    ss >> feature;
+
+    if(feature.empty())
+      continue;
+
+    ret[feature] = FeatureNames();
+    string dep;
+    while(!ss.eof()){
+      ss >> dep;
+      if(DEPENDENCY_START_DELIM != dep[0])
+        continue;
+      ret[feature].push_back(dep.substr(1));
+    }
+  } while (!cin.eof());
+  return ret;
+}
 
 cTree::cTree(const char *strFileName) {
   std::ifstream cin(strFileName);
   if (cin.is_open()) {
-    strDependencyFile = parseStream(cin);
+    dependencies = parseStream(cin);
   } else {
-    ErrorStr += "\nCould not open the file " + string(strFileName);
+    ErrorStr += "Could not open the file " + string(strFileName) + '\n';
   }
 }
 
-//  Fill FinalList with a list of all the feature matching the wildcards
-int getDependency(string strLine, 
-                  string wildcards,
-                  const vector<string> &strDependencyFile,
-                  list<string> &FinalList
-                 ) {
-  // parse wildcards out of "LibVx:feature_name;wildcards_name"
-  int wcpos = strLine.find(";");
+//  Fill deps with all the names of the dependencies
+//  NOTE: the returned deps must be in the order of evaluation: A depends on B,
+//  then B must be before A
+static int getDependency(const string fullFeature,
+                         const DependencyMap &dependencies,
+                         FeatureNames &deps)
+{
+  string feature = fullFeature;
+  size_t wcpos = feature.find(WILDCARD_START_DELIM);
   if (wcpos >= 0) {
-    wildcards = strLine.substr(wcpos);
-    strLine = deblank(strLine.substr(0, wcpos));
+    feature = feature.substr(0, wcpos);
   }
 
-  list<string> tmpChild = getChilds(strLine, strDependencyFile);
-
-  while(!tmpChild.empty()){
-    string str = tmpChild.front();
-    tmpChild.pop_front();
-    getDependency(str, wildcards, strDependencyFile, FinalList);
+  DependencyMap::const_iterator it = dependencies.find(feature);
+  if(it != dependencies.end()){
+    for(FeatureNames::const_iterator dep = it->second.begin();
+        dep != it->second.end(); ++dep){
+      getDependency(*dep, dependencies, deps);
+    }
   }
 
-  string fullFeature = strLine + wildcards;
-  if (std::find(FinalList.begin(), FinalList.end(), fullFeature) == FinalList.end()) {
-    FinalList.push_back(fullFeature);
+  if (std::find(deps.begin(), deps.end(), fullFeature) == deps.end()) {
+    deps.push_back(fullFeature);
   }
 
   return 0;
 }
 
-int cTree::getDependencyList(string) {
-  for (unsigned i = 0; i < strDependencyFile.size(); i++) {
-  }
-  return 1;
-}
+string cTree::listDependencies()
+{
+  std::stringstream ss;
+  std::ostream_iterator<string> outIt(ss, ", ");
 
-int cTree::printTree() {
-  printf("\n This is inside printTree ");
-  return 1;
+  for(DependencyMap::const_iterator dep = dependencies.begin();
+      dep != dependencies.end(); ++dep){
+    ss << "Feature: " << dep->first << '\n';
+    ss << "\tDependencies: " << dep->first;
+    std::copy(dep->second.begin(), dep->second.end(), outIt);
+    ss << '\n';
+  }
+  return ss.str();
 }
 
 /**
@@ -158,61 +140,61 @@ int cTree::printTree() {
  * FptrLookup | vector of pairs:
  *                  first | string: feature name
  *                  second | vector of featureStringPair
+ *
+ * Note: FptrLookup must have its vectorlist be ordered such that each
+ *       of the dependent variables comes after its dependencies: in other
+ *       words, the vector functions are executed in order, so earlier
+ *       results must be available for later calculations
  */
-int cTree::setFeaturePointers(map<string, feature2function *> &mapFptrLib,
-                              map<string, vector<featureStringPair > > *FptrLookup) 
+int cTree::setFeaturePointers(const map<string, feature2function *> &mapFptrLib,
+                              map<string, std::vector<featureStringPair > > &FptrLookup)
 {
-  vector<string> vecFeature = getAllParents(strDependencyFile);
-  if (vecFeature.size() == 0) return -1;
+  if(dependencies.empty())
+    return -1;
 
-  string feature; 
-  for (size_t i = 0; i < vecFeature.size(); i++) {
-    string strLibFeature = vecFeature[i];
+  for(DependencyMap::const_iterator it = dependencies.begin();
+      it != dependencies.end(); ++it){
+    const string &strLibFeature = it->first;
 
-    list<string> FinalList;
-    // fill FinalList with all the dependencies of feature vecFeature[i]
-    getDependency(strLibFeature, "", strDependencyFile, FinalList);
+    FeatureNames deps;
+    getDependency(strLibFeature, dependencies, deps);
 
-    vector<featureStringPair> vecfptr;
+    std::vector<featureStringPair> &vecfptr = FptrLookup[getFeature(strLibFeature)];
 
-    list<string>::iterator lstItr;
-    for (lstItr = FinalList.begin(); lstItr != FinalList.end(); lstItr++) {
-      // Here strLibFeature is the feature name of the dependent feature
-      string &dependency = *lstItr;
-      feature = getFeature(dependency);
-      string version = getVersion(*lstItr);
-      string wildcards = getWildcards(*lstItr);
+    for (FeatureNames::const_iterator depIt = deps.begin();
+         depIt != deps.end(); ++depIt) {
+      const string &dependency = *depIt;
 
+      string version = getVersion(dependency);
       if (version.empty()) {
-        ErrorStr += "\nLibrary version is missing in [" + *lstItr +
-            "] expected format Lib:Feature";
+        ErrorStr += "Library version is missing in [" + dependency +
+            "] expected format Lib:Feature\n";
         return -1;
       }
 
       // Find the feature function pointer map for the library
-      map<string, feature2function *>::iterator mapLibItr
+      map<string, feature2function *>::const_iterator mapLibItr
           = mapFptrLib.find(version);
       if (mapLibItr == mapFptrLib.end()) {
-        ErrorStr += "\nLibrary [" + version + "] is missing\n";
+        ErrorStr += "Library [" + version + "] is missing\n";
         return -1;
       }
 
       // Find the function pointer of the feature in the library
+      string dep_feature = getFeature(dependency);
       feature2function *fptrTbl = mapLibItr->second;
-      feature2function::iterator mapFeatureItr = fptrTbl->find(feature);
+      feature2function::iterator mapFeatureItr = fptrTbl->find(dep_feature);
       if (mapFeatureItr == fptrTbl->end()) {
-        ErrorStr += ("\nFeature [" + feature + "] is missing from Library [" + 
-                     version + "]");
+        ErrorStr += "Feature [" + dep_feature + "] is missing from Library [" + 
+            version + "]\n";
         return -1;
       }
 
+      string wildcards = getWildcards(dependency);
       // Add the feature function pointer and wildcards to the list of dependent
       // features
       vecfptr.push_back(featureStringPair(mapFeatureItr->second, wildcards));
     }
-    // Add the vecfptr from above to a map with as key the base featurei
-    FptrLookup->insert(
-        std::pair<string, vector<featureStringPair> >(feature, vecfptr));
   }
 
   return 1;
